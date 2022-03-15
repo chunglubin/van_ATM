@@ -1,6 +1,7 @@
 package com.lubin.atm
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -34,7 +35,7 @@ class FirstFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val pref = requireContext().getSharedPreferences("atm", Context.MODE_PRIVATE)
         val checked=pref.getBoolean("Rem_username",remember)
-        binding.idRemember.isChecked = checked
+        checked.also { binding.idRemember.isChecked = it }
         binding.idRemember.setOnCheckedChangeListener { compoundButton, checked ->//是否確認已勾
             remember=checked
             pref.edit().putBoolean("rem_username",remember).apply()
@@ -53,7 +54,7 @@ class FirstFragment : Fragment() {
             //login stuff
             val username=binding.idInputName.text.toString()
             val password=binding.idInputPassword.text.toString()
-            if(username=="lubin"&& password=="1234"){//save username to preferences
+            if(username== "lubin" && password== "1234" ){//save username to preferences
                 //val pref = requireContext().getSharedPreferences("atm", Context.MODE_PRIVATE)
                 //var user = pref.getString("User","")
                 if(remember) {
@@ -72,6 +73,10 @@ class FirstFragment : Fragment() {
                     .show()
             }
         }
+        /*binding.buttonFirst.setOnClickListener {
+            val intent=Intent(context,SecondFragment::class.java)
+            startActivity(intent)
+        }*/
     }
 
     override fun onDestroyView() {
