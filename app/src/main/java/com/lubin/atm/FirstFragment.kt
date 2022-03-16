@@ -2,11 +2,13 @@ package com.lubin.atm
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.navigation.fragment.findNavController
 import com.lubin.atm.databinding.FragmentFirstBinding
@@ -20,7 +22,13 @@ class FirstFragment : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
-
+    /*val selectPictureFromGallery=
+        registerForActivityResult(ActivityResultContracts.GetContent()){uri->
+            uri.let {
+                binding.imageView.setImageURI(it)
+                uri.toString()//content://ccc.ddd/sss/aaa 2022.3.16
+            }
+        }*/
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -28,14 +36,22 @@ class FirstFragment : Fragment() {
 
         _binding = FragmentFirstBinding.inflate(inflater, container, false)
         return binding.root
-
+        /*
+        val s="iiiiiii"
+        val uri=Uri.parse(s)
+        return binding.root2022.3.16
+        */
     }
-
+    /*private fun pickFromGallery(){
+        selectPictureFromGallery.launch("image/*")2022.3.16
+    }*/*/
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val pref = requireContext().getSharedPreferences("atm", Context.MODE_PRIVATE)
-        val checked=pref.getBoolean("Rem_username",remember)
-        checked.also { binding.idRemember.isChecked = it }
+        val checked=pref.getBoolean("Rem_user0name",remember)
+        checked.also {
+            binding.idRemember.isChecked = it
+        }
         binding.idRemember.setOnCheckedChangeListener { compoundButton, checked ->//是否確認已勾
             remember=checked
             pref.edit().putBoolean("rem_username",remember).apply()
