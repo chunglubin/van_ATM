@@ -6,22 +6,28 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.google.gson.Gson
 import com.lubin.atm.databinding.FragmentSecondBinding
 import com.lubin.atm.databinding.RowChatroomBinding
 import okhttp3.*
 import okio.ByteString
 import org.w3c.dom.Text
+import java.net.URL
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
  */
 class SecondFragment : Fragment() {
+    private lateinit var adapter:ChatRoomAdapter
     val chatRooms = listOf<ChatRoom>(
         ChatRoom("101101", "MIau", "welcome1"),//remember "," in listOf class of the last sentence.
         ChatRoom("101102", "MIau2", "welcome2"),
@@ -33,6 +39,7 @@ class SecondFragment : Fragment() {
         ChatRoom("101108", "Miau8", "welcome8"),
         ChatRoom("101109", "Miau9", "welcome9"),
     )
+    val rooms= mutableListOf<Lightyear>()
     private var _binding: FragmentSecondBinding? = null
     lateinit var webSocket: WebSocket
     val TAG = SecondFragment::class.java.simpleName
@@ -101,54 +108,86 @@ class SecondFragment : Fragment() {
             //val json = "{\"action\": \"N\", \"content\": \"$message\" }"
             //websocket.
             //val j=Gson().toJson(Message("N"),message)
-            webSocket.send(Gson().toJson(Message("N", message)))
+            webSocket.send(Gson().toJson(MessageSend("N", message)))
             //webSocket.send(Gson().toJson(Message("N",message)))
             //webSocket.send()
             //recyckerview's adapter
 
         }
         binding.recycler.setHasFixedSize(true)
-        binding.recycler.layoutManager = LinearLayoutManager(requireContext())
+        //binding.recycler.layoutManager = LinearLayoutManager(requireContext())
+        binding.recycler.layoutManager=GridLayoutManager(requireContext(),2)
+        adapter=ChatRoomAdapter()
         //binding.idRecycler.adapter=""
-        binding.recycler.adapter = ChatRoomAdapter()
+        binding.recycler.adapter = adapter
+        thread {//text message
+            val json=URL("https://api.jsonserve.com/xioD4j").readText()
+            val msg=Gson().fromJson(json,Message::class.java)
+            Log.d(TAG, "msg:${msg.body.text}")
+        }
+        thread {//test chatroom list
+            val json=URL("https://api.jsonserve.com/Q4AhSu").readText()
+            val chatRooms=Gson().fromJson(json,ChatRooms::class.java)
+            Log.d(TAG, "rooms:${chatRooms.result.lightyear_list}")
+            //fill list with new coming data
+            rooms.clear()
+            rooms.addAll(chatRooms.result.lightyear_list)
+            //List<LightYear>
+            activity?.runOnUiThread {
+                adapter.notifyDataSetChanged()
+            }
+        }
     }
 
-    inner class ChatRoomAdapter:RecyclerView.Adapter<BindingViewHolder>(){
+    inner class ChatRoomAdapter:RecyclerView.Adapter<ChatRoomViewHoloder>(){
         //inner class ChatRoomAdapter:RecyclerView.Adapter<ChatRoomViewHoloder>(){//特殊內部型態 專門在內部做使用
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindingViewHolder {
-            /*val view = layoutInflater.inflate(
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatRoomViewHoloder {
+            val view = layoutInflater.inflate(
                 R.layout.row_chatroom,parent,false)
-            return ChatRoomViewHoloder(view)*/
-        val binding=RowChatroomBinding.inflate(layoutInflater,parent,false)
-        return BindingViewHolder(binding)
+            return ChatRoomViewHoloder(view)
+        //val binding=RowChatroomBinding.inflate(layoutInflater,parent,false)
+        //return BindingViewHolder(binding)
         }
 
-        override fun onBindViewHolder(holder: BindingViewHolder, position: Int) {
-            val room=chatRooms[position]
-            holder.host.setText(room.hostName)
-            holder.title.setText(room.title)
-        }
+        override fun onBindViewHolder(holder: ChatRoomViewHoloder, position: Int) {
+            val lightyear=rooms[position]
+            holder.host.setText(lightyear.stream_title)
+            holder.title.setText(lightyear.nickname)
+            //SecondFragments.this
+            Glide.with(this@SecondFragment)
+                .load(lightyear.head_photo)
+                .into(holder.headShot)
+            /*holder.itemView.setOnClickListener {
+                chatroomClicked(lightyear)
+            }*/
+
+
+        }//在這裡取得元件的控制(每個item內的控制)
 
         override fun getItemCount(): Int {
-            return chatRooms.size
-        }
-
+            return rooms.size
+        }//return一個int，通常都會return陣列長度(arrayList.size)
     }
-    /*inner class ChatRoomViewHoloder(view: View):RecyclerView.ViewHolder(view){
+    inner class ChatRoomViewHoloder(view: View):RecyclerView.ViewHolder(view){
         val host=view.findViewById<TextView>(R.id.id_chatroom_hostname)
         val title=view.findViewById<TextView>(R.id.id_chatroom_title)
-    }*/
-    inner class BindingViewHolder(val binding: RowChatroomBinding):
+        val headShot=view.findViewById<ImageView>(R.id.head_shot)
+    }
+    /*inner class ChatRoomViewHoloder(val binding: RowChatroomBinding):
         RecyclerView.ViewHolder(binding.root){
             val host=binding.idChatroomHostname
             val title=binding.idChatroomTitle
         }
-
+        */
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
-}
 
-data class Message(val action: String,val content:String)
+    //second fragment
+    fun chatroomClicked(lightyear:Lightyear){
+
+    }
+
+}
